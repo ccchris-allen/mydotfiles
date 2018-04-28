@@ -1,5 +1,4 @@
-" Line to indicate 100 characters (limit for code)
-set colorcolumn=100
+set colorcolumn=100 " line to indicate 100 characters (limit for code)
 
 let mapleader=","
 
@@ -11,16 +10,22 @@ set encoding=utf-8
 set background=dark
 set hlsearch
 set number
+set relativenumber " turning on relative line numbers (experimental)
 
 imap jj <esc>
 " Mapping for ctrl-o to add line (without entering insert)
 nmap <C-o> O<Esc>
 " Mapping to add carraige return at cursor (is this overriding anything?)
 nmap <C-p> i<Enter><Esc>
-nmap q @q
+"nmap q @q
 nmap Y y$
 
 set cursorline
+
+augroup filetype javascript syntax=javascript
+
+" small command for setting CSS window size
+command LayoutCSS vertical resize 60
 
 " NORM MODE ----
 " do some mapping.... :<,>norm gUw
@@ -28,6 +33,14 @@ set cursorline
 ":%norm <whatever>
 ":<,>g/\S/norm wgUW (capitalize second word on non-blank lines)
 
+" =================================================================================
+" EasyMotion mappings
+" =================================================================================
+let g:EasyMotion_keys=' abcdefghijklmnopqrstuvwxyz'
+"map <leader><leader>j <Plug>(easymotion-j) " find lines below
+"map <leader><leader>k <Plug>(easymotion-k) " find lines above
+map <leader><leader>l <Plug>(easymotion-lineforward)
+map <leader><leader>h <Plug>(easymotion-linebackward)
 
 " =================================================================================
 " fzf mappings
@@ -45,7 +58,7 @@ nmap <space>h :History/<CR> " search other (?) history
 nmap <space>` :Marks<CR>    " search vim marks
 nmap <space>ag :Ag<CR>      " search with Ag
 nmap <space>g :GitFiles<CR> " search files that have a git history
-nmap <space>commits :Commits<CR> " search through git history
+nmap <space>co :Commits<CR> " search through git history
 
 
 let g:fzf_colors =
@@ -63,17 +76,18 @@ let g:fzf_colors =
     \   'spinner': ['fg', 'Label'],
     \   'header': ['fg', 'Comment'] }
 
-" Ctrl-P mappings from
-" https://www.reddit.com/r/vim/comments/1a7nmw/ctrlp_vs_e_and_b/
-" Note: Using fzf now instead of ctrlp
-" nnoremap <leader>f :CtrlP<CR>
-" nnoremap <leader>b :CtrlPBuffer<CR>
-" nnoremap <leader>T :CtrlPBufTag<CR>
-" nnoremap <leader>t :CtrlPTag<CR>
-" nnoremap <leader>F :CtrlPCurWD<CR>
-" nnoremap <leader>M :CtrlPMRUFiles<CR>
-" nnoremap <leader>m :CtrlPMixed<CR>
-" nnoremap <leader>l :CtrlPLine<CR>
+
+" code for autocomplete
+function! InsertTabWrapper()
+    let col = col('.') - 1
+    if !col || getline('.')[col - 1] !~ '\k'
+        return "\<tab>"
+    else
+        return "\<c-p>"
+    endif
+endfunction
+inoremap <tab> <c-r>=InsertTabWrapper()<cr>
+
 
 " some magic to get vim-markdown-preview to work (via "grip")
 let vim_markdown_preview_github=1
@@ -87,7 +101,6 @@ hi ColorColumn ctermbg=8
 command! -nargs=* -complete=shellcmd Rsplit execute "new | r !<args>"
 command! -nargs=* -complete=shellcmd Rtab execute "tabnew | r !<args>" 
 command! -nargs=* -complete=shellcmd Rpaste execute "r !<args>"
-
 
 " Use 'Q' to close single buffer (note: if there are unsaved changes, it will warn)
 :command Q bd
@@ -160,6 +173,18 @@ autocmd Filetype jsx noremap <buffer> <c-f> :call JsxBeautify()<CR>
 autocmd Filetype html noremap <buffer> <c-f> :call HtmlBeautify()<CR>
 autocmd Filetype css noremap <buffer> <c-f> :call CSSBeautify()<CR>
 
+" =================================================================================
+" lightline config
+" =================================================================================
+let g:lightline = {}
+let g:lightline.colorscheme = 'gruvbox'
+let g:lightline.active = {}
+let g:lightline.active.left = [['mode', 'paste'], ['readonly', 'filename', 'modified']]
+
+" =================================================================================
+" Window Resizing
+" =================================================================================
+
 " Allow for +/- to resize window
 if bufwinnr(1)
     map <Up> <C-W>-
@@ -167,6 +192,9 @@ if bufwinnr(1)
     map <Right> <C-W>>
     map <Left> <C-W><
 endif
+
+nnoremap <C-e> <C-w>=<CR>
+
 
 " Cycle through buffers with tab/shift-tab
 nnoremap <Tab> :bnext<CR>
@@ -184,6 +212,9 @@ nnoremap ]] $
 
 " Tried using <space> to show/hide fold, but had weird side effects
 map + za
+map +a zA
+map - zr
+map -a zR
 set foldmethod=indent
 set foldlevel=99
 
@@ -199,16 +230,20 @@ set nocompatible
 filetype off
 
 call plug#begin()
+Plug 'chriskempson/base16-vim'
+Plug 'ap/vim-css-color'
+Plug 'pangloss/vim-javascript'
 Plug 'severin-lemaignan/vim-minimap'
 Plug 'scrooloose/nerdtree'
 Plug 'jistr/vim-nerdtree-tabs'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+"Plug 'vim-airline/vim-airline'
+"Plug 'vim-airline/vim-airline-themes'
+Plug 'itchyny/lightline.vim'
 Plug 'maksimr/vim-jsbeautify'
 Plug 'FooSoft/vim-argwrap'
 Plug 'easymotion/vim-easymotion'
 Plug 'vim-syntastic/syntastic'
-Plug 'mxw/vim-jsx'
+" Plug 'mxw/vim-jsx'
 Plug 'majutsushi/tagbar'
 "Plug 'python-mode/python-mode'
 "Plug 'chriskempson/base16-vim'
@@ -223,5 +258,6 @@ Plug 'tpope/vim-fugitive'
 Plug 'mhinz/vim-startify'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
+Plug 'isRuslan/vim-es6'
 " Plug 'kien/ctrlp.vim'
 call plug#end()
